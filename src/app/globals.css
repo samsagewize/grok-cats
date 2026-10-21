@@ -309,6 +309,52 @@ nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .panel p, .card p { margin: 8px 0; }
 .meta { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; }
 
+.who { display: flex; gap: 10px; align-items: center; }
+.who h2 { margin: 0; }
+.who img, .avatar-fallback {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--ink);
+  object-fit: cover;
+  background: var(--bg-deep);
+  flex: none;
+}
+.avatar-fallback {
+  display: grid;
+  place-items: center;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-weight: 700;
+}
+
+.github-card { display: grid; gap: 12px; margin-top: 8px; }
+.github-card form { display: grid; gap: 10px; }
+.github-card label { display: grid; gap: 4px; }
+.github-card input[type="text"], .github-card input[name="name"] {
+  font: inherit;
+  padding: 8px;
+  border: 2px solid var(--ink);
+  background: var(--bg);
+  color: var(--ink);
+  width: 100%;
+}
+.swatches { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.swatches legend { width: 100%; padding: 0; margin-bottom: 4px; }
+.swatch { position: relative; width: 32px; height: 32px; }
+.swatch input { position: absolute; inset: 0; opacity: 0; margin: 0; }
+.swatch span { display: block; width: 32px; height: 32px; border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--shadow); }
+.swatch.on span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.instruction-block { display: grid; gap: 8px; }
+.instruction {
+  margin: 0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  word-break: break-word;
+  background: var(--bg);
+  border: 2px solid var(--ink);
+  padding: 10px;
+}
+
 .log { margin: 8px 0 0; padding-left: 18px; }
 .log li { margin: 4px 0; }
 

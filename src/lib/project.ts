@@ -1,3 +1,4 @@
+import { safeAvatar, safeGithubLogin } from "./github";
 import { mapMeta } from "./map";
 import type { CatRecord, PublicCat, WorldSnapshot, WorldState } from "./types";
 
@@ -25,6 +26,8 @@ export function toPublic(cat: CatRecord): PublicCat {
     demo: cat.demo,
     lastHeartbeat: cat.lastHeartbeat,
     createdAt: cat.createdAt,
+    githubLogin: safeGithubLogin(cat.githubLogin),
+    avatarUrl: safeAvatar(cat.avatarUrl),
   };
 }
 

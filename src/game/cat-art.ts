@@ -100,10 +100,54 @@ function mirror(rows: string[]): string[] {
   return rows.map((row) => [...row].reverse().join(""));
 }
 
+function curled(grid: string[][], dir: Dir, frame: number) {
+  const side = dir === "e";
+  const back = dir === "n";
+  fill(grid, 12, 16.6, 6.2, 2.6, "f");
+  const tip = frame % 2;
+  for (let x = 7; x <= 16; x++) put(grid, x, 18, "f", true);
+  put(grid, 6, 17, "f", true);
+  put(grid, 6 + tip, 16, "d", true);
+  put(grid, 17, 17, "f", true);
+
+  if (back) {
+    fill(grid, 12, 14.2, 3.2, 2.2, "f");
+    ear(grid, 9, 11);
+    ear(grid, 15, 11);
+    put(grid, 10, 14, "d", true);
+    put(grid, 14, 14, "d", true);
+  } else if (side) {
+    fill(grid, 15.6, 14.2, 3, 2.3, "f");
+    ear(grid, 14, 11);
+    ear(grid, 18, 12);
+    eye(grid, 16, 14, true);
+    put(grid, 18, 15, "n", true);
+    put(grid, 15, 15, "k", true);
+    fill(grid, 10.5, 16.8, 2, 1.1, "b", true);
+  } else {
+    fill(grid, 8.6, 14.2, 3.1, 2.3, "f");
+    ear(grid, 6, 11);
+    ear(grid, 11, 11);
+    eye(grid, 7, 14, true);
+    eye(grid, 11, 14, true);
+    put(grid, 9, 15, "n", true);
+    put(grid, 7, 15, "k", true);
+    put(grid, 11, 15, "k", true);
+    fill(grid, 15, 16.8, 2.2, 1.1, "b", true);
+  }
+  paw(grid, 10, 18);
+  paw(grid, 13, 18);
+  outline(grid);
+}
+
 export function catGrid(dir: Dir, pose: Anim, frame: number): string[] {
   if (dir === "w") return mirror(catGrid("e", pose, frame));
   const grid = blank();
-  const sitting = pose === "sit" || pose === "work" || pose === "sleep";
+  if (pose === "sleep") {
+    curled(grid, dir, frame);
+    return grid.map((row) => row.join(""));
+  }
+  const sitting = pose === "sit" || pose === "work";
   const side = dir === "e";
   const drop = sitting ? 1 : 0;
 
@@ -143,7 +187,7 @@ export function catGrid(dir: Dir, pose: Anim, frame: number): string[] {
     ear(grid, 16, 6);
   }
 
-  const closed = pose === "sleep" || (pose === "idle" && frame === 1);
+  const closed = pose === "idle" && frame === 1;
   if (dir === "s") {
     eye(grid, 10, sitting ? 10 : 9, closed);
     eye(grid, 14, sitting ? 10 : 9, closed);

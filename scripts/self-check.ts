@@ -3,7 +3,8 @@ import { safeAvatar } from "../src/lib/github";
 import { applyGithubAdoption } from "../src/lib/github-cat";
 import { toPublic } from "../src/lib/project";
 import { stripHtml } from "../src/lib/text";
-import { createSeed, sayAllowed, tick } from "../src/lib/sim";
+import { IDLE_REMOVE_MS, IDLE_SLEEP_MS } from "../src/lib/constants";
+import { createSeed, noteActivity, sayAllowed, tick } from "../src/lib/sim";
 import { hashToken } from "../src/server/auth";
 import { nearestWalkable, tileBlocked, walkable, walkableSpots } from "../src/lib/map";
 import { nudgeToward } from "../src/lib/move";
@@ -74,6 +75,7 @@ if (line.includes("\n") || !line.startsWith("BASE_URL=https://grok-cats.vercel.a
   throw new Error("bot line should be one line with BASE_URL");
 }
 if (!line.includes("CAT_ID=cat_ab") || !line.includes("CAT_TOKEN=tok_en")) throw new Error("bot line ids");
+if (!line.includes("Heartbeat is optional")) throw new Error("heartbeat should be optional");
 if (safeAvatar("https://evil.example/a.png")) throw new Error("avatar host should be rejected");
 
 const garden = createSeed(1);
@@ -111,5 +113,38 @@ const pub = toPublic(owned[0]);
 if (pub.githubLogin !== "sam" || pub.avatarUrl !== "https://avatars.githubusercontent.com/u/42") {
   throw new Error("public github identity");
 }
+
+const visitor = garden.cats.find((cat) => cat.id === "cat_gh1");
+if (!visitor) throw new Error("missing visitor");
+const awakeAt = visitor.lastHeartbeat + IDLE_SLEEP_MS;
+tick(garden, awakeAt);
+const stillAwake = garden.cats.find((cat) => cat.id === "cat_gh1");
+if (!stillAwake || stillAwake.idleSleep) throw new Error("an hour idle should stay awake");
+tick(garden, awakeAt + 1);
+const napping = garden.cats.find((cat) => cat.id === "cat_gh1");
+if (!napping || napping.state !== "sleeping" || !napping.idleSleep || napping.targetX != null) {
+  throw new Error("over an hour idle should curl up");
+}
+noteActivity(napping, awakeAt + 5);
+const woke = snapshotCat(napping);
+if (woke !== `up:idle:${awakeAt + 5}`) throw new Error(`activity should wake a sleeping cat (${woke})`);
+tick(garden, napping.lastHeartbeat + IDLE_REMOVE_MS - 1);
+if (!garden.cats.some((cat) => cat.id === "cat_gh1")) throw new Error("cat should remain through day 7");
+tick(garden, napping.lastHeartbeat + IDLE_REMOVE_MS);
+if (garden.cats.some((cat) => cat.id === "cat_gh1")) throw new Error("seven days idle should leave");
+if (!garden.cats.some((cat) => cat.demo)) throw new Error("demo cats should stay");
+
+function snapshotCat(cat: { idleSleep?: boolean; state: string; lastHeartbeat: number }) {
+  return `${cat.idleSleep ? "asleep" : "up"}:${cat.state}:${cat.lastHeartbeat}`;
+}
+
+function topInk(pose: "sit" | "sleep"): number {
+  const rows = catGrid("s", pose, 0);
+  for (let y = 0; y < rows.length; y++) {
+    if ([...rows[y]].some((cell) => cell !== ".")) return y;
+  }
+  return rows.length;
+}
+if (topInk("sleep") <= topInk("sit")) throw new Error("sleep sprite should be a lower curl");
 
 console.log(`self-check ok (${spots.length} walkable spots)`);

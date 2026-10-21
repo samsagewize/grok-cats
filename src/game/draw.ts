@@ -19,6 +19,7 @@ export type DrawCat = {
   walkPx: number;
   moving: boolean;
   opacity: number;
+  tagAlpha: number;
   selected: boolean;
   hovered: boolean;
   talking: boolean;
@@ -331,6 +332,7 @@ function drawCat(ctx: CanvasRenderingContext2D, cat: DrawCat, time: number) {
   }
   if (cat.state === "working" && !cat.talking) drawThought(ctx, Math.round(cat.rx), top, anim.frame);
   if (cat.state === "sleeping") drawZzz(ctx, Math.round(cat.rx), top, time);
+  ctx.globalAlpha = cat.opacity * cat.tagAlpha;
   drawNameTag(ctx, cat.name, cat.rx, top, cat.color);
   ctx.restore();
 }

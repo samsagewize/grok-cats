@@ -5,7 +5,7 @@ import { colorFromId, patternFromId } from "@/lib/color";
 import { applyGithubAdoption } from "@/lib/github-cat";
 import { nearestWalkable, walkableSpots } from "@/lib/map";
 import { snapshot } from "@/lib/project";
-import { createCat, pushMessage, sayAllowed } from "@/lib/sim";
+import { createCat, noteActivity, pushMessage, sayAllowed } from "@/lib/sim";
 import type { CatRecord, WorldSnapshot, WorldState } from "@/lib/types";
 import { cleanStatus, cleanTask, cleanText } from "@/lib/text";
 import { bearerToken, hashToken, tokenMatches } from "@/server/auth";
@@ -140,6 +140,7 @@ export function sayAsCat(
     const auth = authorize(state, id, request);
     if (!auth.ok) return auth;
     const now = Date.now();
+    noteActivity(auth.cat, now);
     const limited = sayAllowed(state, id, now);
     if (limited) return { ok: false, status: 429, error: limited };
     pushMessage(state, auth.cat, text, now);
@@ -162,6 +163,7 @@ export function setStatus(
     if (!auth.ok) return auth;
     const cat = auth.cat;
     const now = Date.now();
+    noteActivity(cat, now);
     cat.state = status;
     cat.targetX = null;
     cat.targetY = null;
@@ -196,7 +198,7 @@ export function heartbeat(
   return updateState((state) => {
     const auth = authorize(state, id, request);
     if (!auth.ok) return auth;
-    auth.cat.lastHeartbeat = Date.now();
+    noteActivity(auth.cat, Date.now());
     return { ok: true, status: 200, lastHeartbeat: auth.cat.lastHeartbeat };
   });
 }
@@ -229,6 +231,7 @@ export function moveCat(
     const auth = authorize(state, id, request);
     if (!auth.ok) return auth;
     const cat = auth.cat;
+    noteActivity(cat, Date.now());
     const destX = absolute ? x : cat.x + (dx ?? 0);
     const destY = absolute ? y : cat.y + (dy ?? 0);
     const spot = nearestWalkable(destX, destY);

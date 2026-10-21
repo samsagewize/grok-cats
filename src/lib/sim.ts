@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 
-import { HEARTBEAT_TTL_MS, MESSAGE_LIMIT, SAY_MAX_PER_MINUTE, SAY_MIN_INTERVAL_MS } from "./constants";
+import { IDLE_REMOVE_MS, MESSAGE_LIMIT, SAY_MAX_PER_MINUTE, SAY_MIN_INTERVAL_MS } from "./constants";
+import { isIdleAsleep } from "./presence";
 import { DEMOS, DEMO_TASKS } from "./demos";
 import { nearestWalkable, walkable, walkableSpots } from "./map";
 import { nudgeToward } from "./move";
@@ -257,10 +258,35 @@ function demoChat(state: WorldState, now: number) {
   state.nextDemoChatAt = now + 12000 + Math.floor(Math.random() * 10000);
 }
 
+export function noteActivity(cat: CatRecord, now: number) {
+  cat.lastHeartbeat = now;
+  if (!cat.idleSleep) return;
+  cat.idleSleep = false;
+  cat.state = "idle";
+  cat.task = "";
+  cat.pose = "stand";
+  cat.sleepUntil = 0;
+  cat.workUntil = 0;
+  cat.nextDecisionAt = now;
+}
+
+function settleIdle(cat: CatRecord) {
+  cat.idleSleep = true;
+  cat.state = "sleeping";
+  cat.pose = "sit";
+  cat.task = "";
+  cat.targetX = null;
+  cat.targetY = null;
+  cat.goal = "wander";
+  cat.stuckMs = 0;
+  cat.workUntil = 0;
+  cat.sleepUntil = 0;
+}
+
 export function tick(state: WorldState, now: number) {
   const dt = Math.min(5, Math.max(0, (now - (state.lastTick || now)) / 1000));
   state.lastTick = now;
-  state.cats = state.cats.filter((cat) => cat.demo || now - cat.lastHeartbeat < HEARTBEAT_TTL_MS);
+  state.cats = state.cats.filter((cat) => cat.demo || now - cat.lastHeartbeat < IDLE_REMOVE_MS);
   if (state.cats.length === 0) {
     const seeded = createSeed(now);
     state.cats = seeded.cats;
@@ -269,6 +295,7 @@ export function tick(state: WorldState, now: number) {
   }
   for (const cat of state.cats) {
     if (cat.demo) cat.lastHeartbeat = now;
+    else if (isIdleAsleep(cat, now)) settleIdle(cat);
     advance(cat, dt, now);
   }
   for (const cat of state.cats) decide(cat, now);

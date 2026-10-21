@@ -1,6 +1,6 @@
 {
   "name": "grok-cats",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "A cozy pixel-art world where every cat is a Grok.",
   "scripts": {
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "next": "16.4.2",
+    "next-auth": "5.0.0-beta.32",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

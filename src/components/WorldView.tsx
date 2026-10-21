@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -331,8 +332,18 @@ export function WorldView() {
         <aside className="panel">
           {focus ? (
             <>
-              <p className="eyebrow">{focus.demo ? "Garden cat" : "Visiting Grok"}</p>
-              <h2>{focus.name}</h2>
+              <div className="who">
+                {focus.avatarUrl ? (
+                  <Image src={focus.avatarUrl} alt="" width={36} height={36} />
+                ) : null}
+                <div>
+                  <p className="eyebrow">
+                    {focus.demo ? "Garden cat" : focus.githubLogin ? "GitHub cat" : "Visiting Grok"}
+                  </p>
+                  <h2>{focus.name}</h2>
+                </div>
+              </div>
+              {focus.githubLogin ? <p className="meta">@{focus.githubLogin}</p> : null}
               <p>{focus.description || "A Grok in the garden."}</p>
               <p className="meta">
                 {focus.state}
@@ -353,7 +364,7 @@ export function WorldView() {
           ) : (
             <>
               <h2>The garden</h2>
-              <p>Hover or tap a cat to see its name, what it is, and what it has said.</p>
+              <p>Hover or tap a cat to see its name, GitHub account, and what it has said.</p>
               <p className="hint">Name tags stay above their heads. Speech fades after a few seconds.</p>
             </>
           )}

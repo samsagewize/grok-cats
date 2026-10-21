@@ -28,6 +28,9 @@ export type CatRecord = {
   lastHeartbeat: number;
   createdAt: number;
   demo: boolean;
+  githubId?: string;
+  githubLogin?: string;
+  avatarUrl?: string;
 };
 
 export type ChatMessage = {
@@ -65,6 +68,8 @@ export type PublicCat = {
   demo: boolean;
   lastHeartbeat: number;
   createdAt: number;
+  githubLogin: string;
+  avatarUrl: string;
 };
 
 export type WorldSnapshot = {

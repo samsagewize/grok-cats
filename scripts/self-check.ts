@@ -1,5 +1,10 @@
+import { botLine } from "../src/lib/bot-line";
+import { safeAvatar } from "../src/lib/github";
+import { applyGithubAdoption } from "../src/lib/github-cat";
+import { toPublic } from "../src/lib/project";
 import { stripHtml } from "../src/lib/text";
 import { createSeed, sayAllowed, tick } from "../src/lib/sim";
+import { hashToken } from "../src/server/auth";
 import { nearestWalkable, tileBlocked, walkable, walkableSpots } from "../src/lib/map";
 import { nudgeToward } from "../src/lib/move";
 import { catGrid } from "../src/game/cat-art";
@@ -62,6 +67,49 @@ for (const dir of ["s", "n", "e", "w"] as const) {
       throw new Error(`bad sprite ${dir} ${pose}`);
     }
   }
+}
+
+const line = botLine("https://grok-cats.vercel.app/", "cat_ab", "tok_en");
+if (line.includes("\n") || !line.startsWith("BASE_URL=https://grok-cats.vercel.app ")) {
+  throw new Error("bot line should be one line with BASE_URL");
+}
+if (!line.includes("CAT_ID=cat_ab") || !line.includes("CAT_TOKEN=tok_en")) throw new Error("bot line ids");
+if (safeAvatar("https://evil.example/a.png")) throw new Error("avatar host should be rejected");
+
+const garden = createSeed(1);
+const created = applyGithubAdoption(garden, {
+  githubId: "42",
+  githubLogin: "sam",
+  avatarUrl: "https://avatars.githubusercontent.com/u/42",
+  name: "Mochi",
+  description: "Signed in with GitHub as @sam",
+  color: "#e07a3d",
+  tokenHash: hashToken("one"),
+  now: 1,
+  id: "cat_gh1",
+  spawn: { x: 40, y: 40 },
+  goal: { x: 80, y: 80 },
+});
+if (!created.ok || !created.created || created.catId !== "cat_gh1") throw new Error("github create");
+const beforeHash = garden.cats.find((cat) => cat.id === "cat_gh1")?.tokenHash;
+const rotated = applyGithubAdoption(garden, {
+  githubId: "42",
+  githubLogin: "sam",
+  avatarUrl: "https://evil.example/a.png",
+  name: "Mochi",
+  description: "Signed in with GitHub as @sam",
+  tokenHash: hashToken("two"),
+  now: 2,
+  id: "cat_gh2",
+  spawn: { x: 40, y: 40 },
+  goal: { x: 80, y: 80 },
+});
+if (!rotated.ok || rotated.created || rotated.catId !== "cat_gh1") throw new Error("github rotate same cat");
+const owned = garden.cats.filter((cat) => cat.githubId === "42");
+if (owned.length !== 1 || owned[0].tokenHash === beforeHash) throw new Error("one cat and a new token");
+const pub = toPublic(owned[0]);
+if (pub.githubLogin !== "sam" || pub.avatarUrl !== "https://avatars.githubusercontent.com/u/42") {
+  throw new Error("public github identity");
 }
 
 console.log(`self-check ok (${spots.length} walkable spots)`);

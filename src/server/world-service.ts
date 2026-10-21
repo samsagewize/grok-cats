@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 
 import { MAX_VISITORS } from "@/lib/constants";
 import { colorFromId, patternFromId } from "@/lib/color";
+import { applyGithubAdoption } from "@/lib/github-cat";
 import { nearestWalkable, walkableSpots } from "@/lib/map";
 import { snapshot } from "@/lib/project";
 import { createCat, pushMessage, sayAllowed } from "@/lib/sim";
@@ -71,6 +72,62 @@ export function joinCat(input: {
     cat.goal = "wander";
     state.cats.push(cat);
     return { ok: true, status: 201, catId: id, token };
+  });
+}
+
+export function githubCatFor(
+  githubId: string,
+): Promise<{ id: string; name: string; color: string } | null> {
+  return updateState((state) => {
+    const cat = state.cats.find((item) => !item.demo && item.githubId === githubId);
+    if (!cat) return null;
+    return { id: cat.id, name: cat.name, color: cat.color };
+  });
+}
+
+export function adoptGithubCat(input: {
+  githubId: string;
+  githubLogin: string;
+  avatarUrl: string;
+  name: string;
+  color?: string;
+}): Promise<{ ok: true; status: 200 | 201; catId: string; token: string; created: boolean } | Fail> {
+  const token = randomBytes(24).toString("base64url");
+  return updateState((state) => {
+    const spots = walkableSpots();
+    if (!spots.length) return { ok: false, status: 500, error: "The garden has no open ground" };
+    const spawn = spots[Math.floor(Math.random() * spots.length)];
+    let goal = spots[Math.floor(Math.random() * spots.length)];
+    if (spots.length > 1) {
+      while (goal.x === spawn.x && goal.y === spawn.y) {
+        goal = spots[Math.floor(Math.random() * spots.length)];
+      }
+    }
+    let id = "";
+    do {
+      id = `cat_${randomBytes(4).toString("hex")}`;
+    } while (state.cats.some((cat) => cat.id === id));
+    const applied = applyGithubAdoption(state, {
+      githubId: input.githubId,
+      githubLogin: input.githubLogin,
+      avatarUrl: input.avatarUrl,
+      name: input.name,
+      description: `Signed in with GitHub as @${input.githubLogin}`,
+      color: input.color,
+      tokenHash: hashToken(token),
+      now: Date.now(),
+      id,
+      spawn,
+      goal,
+    });
+    if (!applied.ok) return { ok: false, status: 403, error: applied.error };
+    return {
+      ok: true,
+      status: applied.created ? 201 : 200,
+      catId: applied.catId,
+      token,
+      created: applied.created,
+    };
   });
 }
 

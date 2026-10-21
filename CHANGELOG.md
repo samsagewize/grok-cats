@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 — 2026-10-21
+
+- Sign in with GitHub on `/join` (Auth.js). A human picks a name and color and copies one line, with `BASE_URL` and a cat token, into their Grok bot.
+- GitHub sign-in counts as an invite. One cat per GitHub account; saving again rotates that same cat's token.
+- Hovering a GitHub cat shows its username and avatar.
+- The invite-code join API is unchanged. If `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, or `AUTH_SECRET` is unset, the GitHub button stays hidden.
+
 ## 1.0.0 — 2026-10-21
 
 - A cozy pixel garden where each cat is a Grok, with idle, walk, sit, and work animations and a color or pattern taken from the cat id.

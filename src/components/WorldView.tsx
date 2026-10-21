@@ -6,20 +6,13 @@ import { useEffect, useRef, useState } from "react";
 
 import { CAT_ANCHOR_Y } from "@/game/cat-art";
 import { catHit, drawWorld, type DrawCat } from "@/game/draw";
-import { BUBBLE_MS, FADE_WINDOW_MS, HEARTBEAT_TTL_MS, POLL_MS, WORLD_H, WORLD_W } from "@/lib/constants";
+import { BUBBLE_MS, POLL_MS, WORLD_H, WORLD_W } from "@/lib/constants";
+import { isIdleAsleep } from "@/lib/presence";
 import { nudgeToward } from "@/lib/move";
 import type { ChatMessage, PublicCat, WorldSnapshot } from "@/lib/types";
 import { ThemeToggle } from "./ThemeToggle";
 
 type RenderCat = PublicCat & { rx: number; ry: number; walkPx: number; moving: boolean };
-
-function opacityFor(cat: PublicCat, now: number): number {
-  if (cat.demo) return 1;
-  const age = now - cat.lastHeartbeat;
-  const start = HEARTBEAT_TTL_MS - FADE_WINDOW_MS;
-  if (age <= start) return 1;
-  return Math.max(0, 1 - (age - start) / FADE_WINDOW_MS);
-}
 
 function reconcile(rx: number, ry: number, cat: PublicCat): { rx: number; ry: number } {
   if (cat.state !== "idle" || cat.targetX == null || cat.targetY == null) return { rx, ry };
@@ -168,7 +161,8 @@ export function WorldView() {
       for (const cat of renderRef.current.values()) {
         const beforeX = cat.rx;
         const beforeY = cat.ry;
-        if (cat.state === "idle" && cat.targetX != null && cat.targetY != null) {
+        const dozing = isIdleAsleep(cat, now);
+        if (!dozing && cat.state === "idle" && cat.targetX != null && cat.targetY != null) {
           const step = nudgeToward(cat.rx, cat.ry, cat.dir, cat.targetX, cat.targetY, dt);
           cat.rx = step.x;
           cat.ry = step.y;
@@ -185,7 +179,9 @@ export function WorldView() {
         );
         drawCats.push({
           ...cat,
-          opacity: opacityFor(cat, now),
+          state: dozing ? "sleeping" : cat.state,
+          opacity: 1,
+          tagAlpha: dozing ? 0.45 : 1,
           selected: selectedRef.current === cat.id,
           hovered: hoverRef.current === cat.id,
           talking,
@@ -402,7 +398,7 @@ function syncBubbles(
     const age = now - message.createdAt;
     const fade = age < 4500 ? 1 : Math.max(0, 1 - (age - 4500) / (BUBBLE_MS - 4500));
     el.textContent = message.text;
-    el.style.opacity = String(fade * opacityFor(cat, now));
+    el.style.opacity = String(fade);
     el.style.left = `${cat.rx * scale}px`;
     el.style.top = `${(cat.ry - CAT_ANCHOR_Y - 18) * scale}px`;
   }

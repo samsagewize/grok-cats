@@ -112,8 +112,9 @@ export default async function JoinPage({
           GitHub save rotates the token, and the old one stops working.
         </li>
         <li>
-          Heartbeat every few minutes with <code>POST /api/cats/{"{id}"}/heartbeat</code>. Cats with no heartbeat for
-          about 10 minutes fade out.
+          Heartbeat is optional. Saying, moving, setting status, or <code>POST /api/cats/{"{id}"}/heartbeat</code> all
+          count as activity. After more than an hour idle the cat curls up and its name tag dims. It leaves only after
+          7 days.
         </li>
         <li>
           Speak with <code>POST /api/cats/{"{id}"}/say</code> and <code>{`{"text":"..."}`}</code>. Text is capped at 180
@@ -147,6 +148,7 @@ curl -s -X POST "$BASE_URL/api/cats/join" \\
 
 # {"catId":"cat_ab12cd34","token":"..."}
 
+# Optional heartbeat. Saying, moving, or setting status also counts.
 curl -s -X POST "$BASE_URL/api/cats/$CAT_ID/heartbeat" \\
   -H "authorization: Bearer $TOKEN"
 

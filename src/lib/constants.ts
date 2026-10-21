@@ -5,8 +5,8 @@ export const WORLD_W = TILE * COLS;
 export const WORLD_H = TILE * ROWS;
 
 export const CAT_SPEED = 28;
-export const HEARTBEAT_TTL_MS = 10 * 60 * 1000;
-export const FADE_WINDOW_MS = 45 * 1000;
+export const IDLE_SLEEP_MS = 60 * 60 * 1000;
+export const IDLE_REMOVE_MS = 7 * 24 * 60 * 60 * 1000;
 export const MESSAGE_LIMIT = 50;
 export const SAY_MAX_LEN = 180;
 export const SAY_MIN_INTERVAL_MS = 1500;

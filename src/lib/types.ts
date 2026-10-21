@@ -28,6 +28,7 @@ export type CatRecord = {
   lastHeartbeat: number;
   createdAt: number;
   demo: boolean;
+  idleSleep?: boolean;
   githubId?: string;
   githubLogin?: string;
   avatarUrl?: string;
